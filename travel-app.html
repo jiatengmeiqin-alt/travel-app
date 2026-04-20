@@ -1,0 +1,1925 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>旅行管理アプリ</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --primary: #4f7cff;
+    --primary-dark: #3a63e0;
+    --accent: #ff6b6b;
+    --bg: #f0f4ff;
+    --card: #ffffff;
+    --text: #1a1a2e;
+    --muted: #6b7280;
+    --border: #e2e8f0;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --radius: 12px;
+    --shadow: 0 2px 12px rgba(79,124,255,0.10);
+  }
+
+  body {
+    font-family: 'Segoe UI', 'Hiragino Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ===== HEADER ===== */
+  header {
+    background: linear-gradient(135deg, #4f7cff 0%, #a78bfa 100%);
+    color: white;
+    padding: 20px 24px 0;
+    box-shadow: 0 4px 20px rgba(79,124,255,0.3);
+  }
+  .header-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .header-top h1 { font-size: 1.5rem; font-weight: 700; }
+  .header-top .emoji { font-size: 1.8rem; }
+
+  /* ===== TRIP TABS ===== */
+  .trip-tabs-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 0;
+  }
+  .trip-tabs-row::-webkit-scrollbar { display: none; }
+
+  .trip-tab {
+    padding: 10px 20px;
+    border-radius: 10px 10px 0 0;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    white-space: nowrap;
+    background: rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.8);
+    border: none;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .trip-tab:hover { background: rgba(255,255,255,0.35); }
+  .trip-tab.active {
+    background: var(--bg);
+    color: var(--primary);
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.08);
+  }
+  .trip-tab .tab-emoji { font-size: 1.1rem; }
+  .trip-tab .tab-delete {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    color: white;
+    font-size: 0.7rem;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+    border: none;
+    flex-shrink: 0;
+  }
+  .trip-tab:hover .tab-delete { opacity: 1; }
+  .trip-tab.active .tab-delete { background: rgba(79,124,255,0.2); color: var(--primary); }
+
+  .btn-add-trip {
+    padding: 10px 16px;
+    border-radius: 10px 10px 0 0;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    background: rgba(255,255,255,0.15);
+    color: white;
+    border: 2px dashed rgba(255,255,255,0.5);
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .btn-add-trip:hover { background: rgba(255,255,255,0.25); }
+
+  /* ===== MAIN CONTENT ===== */
+  main { max-width: 960px; margin: 0 auto; padding: 24px 16px; }
+
+  /* ===== SECTION TABS ===== */
+  .section-nav {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 6px;
+    box-shadow: var(--shadow);
+  }
+  .section-btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--muted);
+    background: transparent;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .section-btn:hover { background: var(--bg); color: var(--text); }
+  .section-btn.active { background: var(--primary); color: white; box-shadow: 0 2px 8px rgba(79,124,255,0.3); }
+
+  .section-content { display: none; }
+  .section-content.active { display: block; }
+
+  /* ===== CARDS ===== */
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+    margin-bottom: 16px;
+  }
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-size: 1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* ===== BUTTONS ===== */
+  .btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-danger { background: #fee2e2; color: var(--accent); }
+  .btn-danger:hover { background: var(--accent); color: white; }
+  .btn-ghost { background: var(--bg); color: var(--muted); }
+  .btn-ghost:hover { background: var(--border); color: var(--text); }
+  .btn-sm { padding: 5px 10px; font-size: 0.78rem; }
+  .btn-icon { width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
+
+  /* ===== FORMS ===== */
+  .form-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    margin-bottom: 12px;
+  }
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .form-group label { font-size: 0.78rem; font-weight: 600; color: var(--muted); }
+  input, select, textarea {
+    padding: 9px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--card);
+    transition: border-color 0.2s;
+    outline: none;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--primary); }
+  input[type="date"], input[type="time"] { min-width: 140px; }
+
+  /* ===== ITINERARY ===== */
+  .itinerary-day { margin-bottom: 24px; }
+  .day-header {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--primary);
+    padding: 8px 14px;
+    background: linear-gradient(90deg, #eff3ff, #f8f0ff);
+    border-radius: 8px;
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-left: 4px solid var(--primary);
+  }
+
+  /* Timeline layout */
+  .timeline {
+    position: relative;
+    padding-left: 52px;
+    margin-top: 8px;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 19px;
+    top: 0; bottom: 0;
+    width: 2px;
+    background: var(--border);
+  }
+
+  .tl-item {
+    position: relative;
+    margin-bottom: 10px;
+  }
+  .tl-dot {
+    position: absolute;
+    left: -39px;
+    top: 14px;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.72rem;
+    z-index: 1;
+    flex-shrink: 0;
+    border: 2px solid white;
+    box-shadow: 0 0 0 2px var(--border);
+  }
+  .dot-flight   { background: #dbeafe; box-shadow: 0 0 0 2px #93c5fd; }
+  .dot-hotel    { background: #d1fae5; box-shadow: 0 0 0 2px #6ee7b7; }
+  .dot-food     { background: #fef3c7; box-shadow: 0 0 0 2px #fcd34d; }
+  .dot-sightseeing { background: #ede9fe; box-shadow: 0 0 0 2px #c4b5fd; }
+  .dot-transport { background: #fee2e2; box-shadow: 0 0 0 2px #fca5a5; }
+  .dot-other    { background: #f3f4f6; box-shadow: 0 0 0 2px #d1d5db; }
+
+  .tl-card {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .tl-card:hover { border-color: var(--primary); box-shadow: 0 2px 8px rgba(79,124,255,0.12); }
+
+  .tl-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .tl-type-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .item-type-badge {
+    padding: 2px 8px;
+    border-radius: 5px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .type-flight { background: #dbeafe; color: #1d4ed8; }
+  .type-hotel { background: #d1fae5; color: #065f46; }
+  .type-food { background: #fef3c7; color: #92400e; }
+  .type-sightseeing { background: #ede9fe; color: #5b21b6; }
+  .type-transport { background: #fee2e2; color: #991b1b; }
+  .type-other { background: #f3f4f6; color: #374151; }
+
+  .tl-name { font-weight: 700; font-size: 0.97rem; }
+  .tl-actions { display: flex; gap: 4px; flex-shrink: 0; }
+
+  /* Route row — the key "shiori" element */
+  .route-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin: 6px 0;
+    font-size: 0.9rem;
+  }
+  .route-point {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 80px;
+  }
+  .route-station {
+    font-weight: 700;
+    font-size: 0.92rem;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .route-time {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--primary);
+    white-space: nowrap;
+  }
+  .route-arrow {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 40px;
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+  .route-arrow-line {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    color: var(--muted);
+    font-size: 1rem;
+  }
+  .route-arrow-label { font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
+
+  .detail-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-top: 4px;
+  }
+  .detail-chip {
+    font-size: 0.78rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .item-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--primary);
+    text-decoration: none;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    background: #eff3ff;
+    border-radius: 5px;
+    transition: background 0.2s;
+    white-space: nowrap;
+  }
+  .item-link:hover { background: #dbeafe; }
+  .item-link.maps { background: #fef9c3; color: #854d0e; }
+  .item-link.maps:hover { background: #fef08a; }
+  .item-actions { display: flex; gap: 4px; flex-shrink: 0; }
+
+  /* ===== ADD ITEM MODAL ===== */
+  .modal-lg { max-width: 620px; }
+  .type-selector {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .type-btn {
+    padding: 7px 12px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-weight: 600;
+    background: var(--bg);
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+  .type-btn:hover { border-color: var(--primary); color: var(--primary); }
+  .type-btn.selected { border-color: var(--primary); background: #eff3ff; color: var(--primary); }
+  .type-fields { display: none; }
+  .type-fields.active { display: block; }
+  .divider { height: 1px; background: var(--border); margin: 12px 0; }
+
+  /* ===== EXPENSE ===== */
+  .expense-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .summary-card {
+    background: linear-gradient(135deg, var(--primary) 0%, #a78bfa 100%);
+    color: white;
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+  }
+  .summary-card.budget-card { background: linear-gradient(135deg, #10b981 0%, #34d399 100%); }
+  .summary-card.remaining-card { background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%); }
+  .summary-card.over-budget { background: linear-gradient(135deg, #ef4444 0%, #f87171 100%); }
+  .summary-label { font-size: 0.72rem; opacity: 0.9; margin-bottom: 4px; }
+  .summary-value { font-size: 1.3rem; font-weight: 700; }
+
+  .expense-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 8px;
+  }
+  .expense-category {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+  .expense-info { flex: 1; min-width: 0; }
+  .expense-name { font-weight: 600; font-size: 0.9rem; }
+  .expense-date { font-size: 0.78rem; color: var(--muted); }
+  .expense-amount { font-weight: 700; font-size: 1rem; color: var(--accent); white-space: nowrap; }
+  .expense-amount-jpy { font-size: 0.75rem; color: var(--muted); text-align: right; }
+
+  .currency-note { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+
+  /* ===== PACKING ===== */
+  .packing-category { margin-bottom: 20px; }
+  .packing-cat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .packing-cat-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .packing-progress {
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .progress-bar {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--success);
+    border-radius: 2px;
+    transition: width 0.3s;
+  }
+  .packing-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .packing-item:hover { background: var(--bg); }
+  .packing-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--success); cursor: pointer; }
+  .packing-item.checked .packing-item-name { text-decoration: line-through; color: var(--muted); }
+  .packing-item-name { flex: 1; font-size: 0.9rem; }
+  .packing-item-count { font-size: 0.78rem; color: var(--muted); }
+
+  /* ===== MODAL ===== */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 24px;
+    width: 100%;
+    max-width: 480px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  }
+  .modal h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 16px; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+
+  /* ===== EMPTY STATE ===== */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+  }
+  .empty-state .empty-emoji { font-size: 3rem; margin-bottom: 12px; }
+  .empty-state p { font-size: 0.9rem; }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 600px) {
+    /* layout */
+    main { padding: 16px 10px; }
+    header { padding: 16px 12px 0; }
+    .header-top h1 { font-size: 1.2rem; }
+    .header-top .emoji { font-size: 1.4rem; }
+
+    /* trip tabs */
+    .trip-tab { padding: 8px 12px; font-size: 0.8rem; }
+    .btn-add-trip { padding: 8px 10px; font-size: 0.78rem; }
+
+    /* section nav */
+    .section-nav { gap: 4px; padding: 4px; }
+    .section-btn { font-size: 0.78rem; padding: 8px 4px; gap: 3px; }
+
+    /* forms */
+    .form-row { flex-direction: column; }
+    .form-row .form-group { width: 100%; }
+    .form-row input, .form-row select, .form-row textarea { width: 100% !important; min-width: unset !important; }
+    /* hide the arrow between route fields on mobile — they stack vertically */
+    .form-row > div[style*="font-size:1.4rem"] { display: none; }
+
+    /* modal */
+    .modal { padding: 16px 14px; max-height: 90vh; overflow-y: auto; }
+    .modal-lg { max-width: 100%; }
+    .modal h3 { font-size: 1rem; }
+    .type-selector { gap: 4px; }
+    .type-btn { padding: 6px 9px; font-size: 0.78rem; }
+
+    /* expense */
+    .expense-summary { grid-template-columns: 1fr 1fr; }
+    .expense-item { gap: 6px; }
+    .expense-amount { font-size: 0.9rem; }
+
+    /* timeline */
+    .timeline { padding-left: 42px; }
+    .tl-dot { left: -31px; width: 18px; height: 18px; font-size: 0.65rem; }
+    .timeline::before { left: 15px; }
+    .route-row { gap: 4px; }
+    .route-time { font-size: 0.9rem; }
+    .route-station { font-size: 0.82rem; }
+
+    /* packing */
+    .packing-item { padding: 8px 8px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <span class="emoji">✈️</span>
+    <h1>旅行管理アプリ</h1>
+    <button onclick="openSettingsModal()" style="margin-left:auto;background:rgba(255,255,255,0.2);color:white;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;font-size:1rem;">⚙️</button>
+  </div>
+  <div class="trip-tabs-row" id="tripTabsRow">
+    <!-- tabs injected by JS -->
+    <button class="btn-add-trip" onclick="openAddTripModal()">＋ 旅行を追加</button>
+  </div>
+</header>
+
+<main>
+  <!-- Section Navigation -->
+  <div class="section-nav">
+    <button class="section-btn active" onclick="showSection('itinerary', this)">
+      🗓️ 旅程
+    </button>
+    <button class="section-btn" onclick="showSection('expense', this)">
+      💰 旅費
+    </button>
+    <button class="section-btn" onclick="showSection('packing', this)">
+      🧳 持ち物
+    </button>
+  </div>
+
+  <!-- ITINERARY SECTION -->
+  <div id="section-itinerary" class="section-content active">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🗓️ 旅程スケジュール</div>
+        <button class="btn btn-primary btn-sm" onclick="openAddItemModal()">＋ 追加</button>
+        <button class="btn btn-ghost btn-sm" onclick="openImportModal()" style="background:#fef3c7;color:#92400e;">📷 インポート</button>
+      </div>
+      <div id="itineraryList"></div>
+    </div>
+  </div>
+
+  <!-- EXPENSE SECTION -->
+  <div id="section-expense" class="section-content">
+    <!-- Budget setting -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">💰 旅費管理</div>
+      </div>
+      <div id="expenseSummary" class="expense-summary"></div>
+      <div class="form-row" style="margin-bottom:0;">
+        <div class="form-group">
+          <label>予算 (円)</label>
+          <input type="number" id="budgetInput" placeholder="例: 200000" style="width:150px;" oninput="saveBudget()">
+        </div>
+        <div class="form-group">
+          <label>現地通貨</label>
+          <select id="currencySelect" onchange="saveCurrency()">
+            <option value="JPY">JPY 円</option>
+            <option value="EUR">EUR ユーロ</option>
+            <option value="USD">USD ドル</option>
+            <option value="GBP">GBP ポンド</option>
+            <option value="CNY">CNY 人民元</option>
+            <option value="KRW">KRW ウォン</option>
+            <option value="THB">THB バーツ</option>
+          </select>
+        </div>
+        <div class="form-group" id="rateGroup" style="display:none;">
+          <label>為替レート (1 <span id="rateLabel"></span> = 円)</label>
+          <input type="number" id="exchangeRate" placeholder="例: 165" style="width:130px;" oninput="saveExchangeRate()">
+        </div>
+      </div>
+    </div>
+
+    <!-- Add expense -->
+    <div class="card">
+      <div class="card-title" style="margin-bottom:14px;">＋ 支出を追加</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>カテゴリ</label>
+          <select id="expCat">
+            <option value="✈️">✈️ 交通</option>
+            <option value="🏨">🏨 宿泊</option>
+            <option value="🍽️">🍽️ 食事</option>
+            <option value="🗺️">🗺️ 観光</option>
+            <option value="🛍️">🛍️ ショッピング</option>
+            <option value="💊">💊 医療</option>
+            <option value="📱">📱 通信</option>
+            <option value="📌">📌 その他</option>
+          </select>
+        </div>
+        <div class="form-group" style="flex:1; min-width:150px;">
+          <label>内容</label>
+          <input type="text" id="expName" placeholder="例: ミラノ→ローマ 電車">
+        </div>
+        <div class="form-group">
+          <label>金額</label>
+          <input type="number" id="expAmount" placeholder="0" style="width:110px;">
+        </div>
+        <div class="form-group">
+          <label>通貨</label>
+          <select id="expCurrency">
+            <option value="JPY">JPY</option>
+            <option value="EUR">EUR</option>
+            <option value="USD">USD</option>
+            <option value="GBP">GBP</option>
+            <option value="CNY">CNY</option>
+            <option value="KRW">KRW</option>
+            <option value="THB">THB</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>日付</label>
+          <input type="date" id="expDate" style="min-width:140px;">
+        </div>
+        <div class="form-group" style="justify-content:flex-end;">
+          <button class="btn btn-primary" onclick="addExpense()" style="margin-top:auto;">追加</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Expense list -->
+    <div class="card">
+      <div class="card-title" style="margin-bottom:14px;">支出一覧</div>
+      <div id="expenseList"></div>
+    </div>
+  </div>
+
+  <!-- PACKING SECTION -->
+  <div id="section-packing" class="section-content">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🧳 パッキングリスト</div>
+        <button class="btn btn-primary btn-sm" onclick="openAddPackingModal()">＋ アイテム追加</button>
+      </div>
+      <div id="packingList"></div>
+    </div>
+  </div>
+</main>
+
+<!-- MODAL: Add Trip -->
+<div class="modal-overlay" id="modalAddTrip">
+  <div class="modal">
+    <h3>✈️ 旅行を追加</h3>
+    <div class="form-group" style="margin-bottom:12px;">
+      <label>旅行名</label>
+      <input type="text" id="newTripName" placeholder="例: パリ旅行 2026">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>出発日</label>
+        <input type="date" id="newTripStart">
+      </div>
+      <div class="form-group">
+        <label>帰国日</label>
+        <input type="date" id="newTripEnd">
+      </div>
+    </div>
+    <div class="form-group" style="margin-top:8px;">
+      <label>絵文字アイコン</label>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;" id="emojiPicker">
+        <!-- filled by JS -->
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modalAddTrip')">キャンセル</button>
+      <button class="btn btn-primary" onclick="addTrip()">追加する</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Import from screenshot -->
+<div class="modal-overlay" id="modalImport">
+  <div class="modal modal-lg">
+    <h3>📷 スクショから追加</h3>
+
+    <!-- AI section -->
+    <div style="background:#eff3ff;border-radius:8px;padding:12px;margin-bottom:12px;">
+      <div style="font-size:0.85rem;font-weight:700;color:var(--primary);margin-bottom:8px;">🤖 AIで自動読み取り</div>
+      <div class="form-group" style="margin-bottom:8px;">
+        <label>予約確認・航空券・ホテル予約のスクショを選択</label>
+        <input type="file" id="imageInput" accept="image/*" style="width:100%;padding:8px;border:1.5px dashed var(--border);border-radius:8px;background:white;font-size:0.85rem;">
+      </div>
+      <button id="analyzeBtn" class="btn btn-primary" onclick="analyzeImage()" style="width:100%;">🤖 AIで読み取る</button>
+      <div id="aiStatus" style="display:none;font-size:0.82rem;margin-top:8px;padding:8px;border-radius:6px;background:white;color:var(--muted);"></div>
+    </div>
+
+    <!-- Manual section -->
+    <details style="margin-bottom:12px;">
+      <summary style="font-size:0.82rem;color:var(--muted);cursor:pointer;padding:4px 0;">📋 JSONを手動で貼り付ける</summary>
+      <div style="margin-top:8px;">
+        <textarea id="importJson" rows="6" style="width:100%;font-family:monospace;font-size:0.78rem;resize:vertical;border:1.5px solid var(--border);border-radius:8px;padding:8px;" placeholder='{"type":"flight","date":"2026-07-10","flightNo":"NH001","fromAirport":"関西国際空港 KIX","departTime":"10:30","toAirport":"ミラノ MXP","arrivalTime":"16:00","boardingTime":"10:00","note":"","url":""}'></textarea>
+      </div>
+    </details>
+
+    <div id="importError" style="color:#ef4444;font-size:0.82rem;margin-bottom:8px;display:none;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modalImport')">キャンセル</button>
+      <button class="btn btn-primary" onclick="importItem()">追加する</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Settings -->
+<div class="modal-overlay" id="modalSettings">
+  <div class="modal">
+    <h3>⚙️ 設定</h3>
+    <div class="form-group" style="margin-bottom:16px;">
+      <label>Anthropic APIキー</label>
+      <input type="password" id="apiKeyInput" placeholder="sk-ant-..." style="width:100%;">
+      <div style="font-size:0.75rem;color:var(--muted);margin-top:6px;line-height:1.6;">
+        スクショをAIで読み取るために使用します。<br>
+        APIキーはこのデバイスのみに保存されます。<br>
+        <a href="https://console.anthropic.com/" target="_blank" rel="noopener" style="color:var(--primary);">APIキーの取得はこちら →</a>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modalSettings')">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveApiKey()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Add Itinerary Item -->
+<div class="modal-overlay" id="modalAddItem">
+  <div class="modal modal-lg">
+    <h3>📋 予定を追加</h3>
+
+    <!-- Type selector -->
+    <div class="type-selector">
+      <button class="type-btn selected" data-type="transport" onclick="selectItemType('transport',this)">🚆 電車・交通</button>
+      <button class="type-btn" data-type="flight" onclick="selectItemType('flight',this)">✈️ フライト</button>
+      <button class="type-btn" data-type="hotel" onclick="selectItemType('hotel',this)">🏨 ホテル</button>
+      <button class="type-btn" data-type="food" onclick="selectItemType('food',this)">🍽️ お店・食事</button>
+      <button class="type-btn" data-type="sightseeing" onclick="selectItemType('sightseeing',this)">🗺️ 観光</button>
+      <button class="type-btn" data-type="other" onclick="selectItemType('other',this)">📌 その他</button>
+    </div>
+
+    <!-- Common: date -->
+    <div class="form-row" style="margin-bottom:12px;">
+      <div class="form-group">
+        <label>日付</label>
+        <input type="date" id="fi_date">
+      </div>
+    </div>
+    <div class="divider"></div>
+
+    <!-- TRANSPORT fields -->
+    <div class="type-fields active" id="fields_transport">
+      <div class="form-row">
+        <div class="form-group">
+          <label>交通手段</label>
+          <select id="fi_transport_mode">
+            <option value="電車">🚆 電車</option>
+            <option value="バス">🚌 バス</option>
+            <option value="タクシー">🚕 タクシー</option>
+            <option value="フェリー">⛴️ フェリー</option>
+            <option value="バイク・レンタカー">🚗 レンタカー</option>
+          </select>
+        </div>
+        <div class="form-group" style="flex:1; min-width:160px;">
+          <label>路線名（任意）</label>
+          <input type="text" id="fi_transport_line" placeholder="例: 大阪環状線、阪急京都線">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="flex:1; min-width:130px;">
+          <label>🚉 出発駅・停留所</label>
+          <input type="text" id="fi_from_station" placeholder="例: 大阪駅">
+        </div>
+        <div class="form-group">
+          <label>出発時刻</label>
+          <input type="time" id="fi_from_time">
+        </div>
+        <div style="display:flex; align-items:flex-end; padding-bottom:9px; font-size:1.4rem; color:var(--muted);">→</div>
+        <div class="form-group" style="flex:1; min-width:130px;">
+          <label>🏁 到着駅・停留所</label>
+          <input type="text" id="fi_to_station" placeholder="例: 京都駅">
+        </div>
+        <div class="form-group">
+          <label>到着時刻</label>
+          <input type="time" id="fi_to_time">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="flex:1;">
+          <label>メモ（任意）</label>
+          <input type="text" id="fi_transport_note" placeholder="号車、乗り換えなど">
+        </div>
+        <div class="form-group" style="flex:2; min-width:200px;">
+          <label>予約サイトURL（任意）</label>
+          <input type="url" id="fi_transport_url" placeholder="https://...">
+        </div>
+      </div>
+    </div>
+
+    <!-- FLIGHT fields -->
+    <div class="type-fields" id="fields_flight">
+      <div class="form-row">
+        <div class="form-group" style="flex:1;">
+          <label>フライト番号</label>
+          <input type="text" id="fi_flight_no" placeholder="例: NH001, JAL123">
+        </div>
+        <div class="form-group">
+          <label>搭乗開始時刻（任意）</label>
+          <input type="time" id="fi_boarding_time">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="flex:1; min-width:130px;">
+          <label>🛫 出発空港</label>
+          <input type="text" id="fi_from_airport" placeholder="例: 関西国際空港 KIX">
+        </div>
+        <div class="form-group">
+          <label>出発時刻</label>
+          <input type="time" id="fi_depart_time">
+        </div>
+        <div style="display:flex; align-items:flex-end; padding-bottom:9px; font-size:1.4rem; color:var(--muted);">→</div>
+        <div class="form-group" style="flex:1; min-width:130px;">
+          <label>🛬 到着空港</label>
+          <input type="text" id="fi_to_airport" placeholder="例: ミラノ マルペンサ MXP">
+        </div>
+        <div class="form-group">
+          <label>到着時刻</label>
+          <input type="time" id="fi_arrival_time">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="flex:1;">
+          <label>メモ（任意）</label>
+          <input type="text" id="fi_flight_note" placeholder="座席番号、ターミナルなど">
+        </div>
+        <div class="form-group" style="flex:2; min-width:200px;">
+          <label>予約サイトURL（任意）</label>
+          <input type="url" id="fi_flight_url" placeholder="https://...">
+        </div>
+      </div>
+    </div>
+
+    <!-- HOTEL fields -->
+    <div class="type-fields" id="fields_hotel">
+      <div class="form-row">
+        <div class="form-group" style="flex:2; min-width:180px;">
+          <label>ホテル名</label>
+          <input type="text" id="fi_hotel_name" placeholder="例: ホテルグランヴィア大阪">
+        </div>
+        <div class="form-group">
+          <label>チェックイン時刻</label>
+          <input type="time" id="fi_checkin_time">
+        </div>
+        <div class="form-group">
+          <label>チェックアウト時刻</label>
+          <input type="time" id="fi_checkout_time">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="flex:1; min-width:200px;">
+          <label>📍 住所（Google Maps用）</label>
+          <input type="text" id="fi_hotel_address" placeholder="例: 大阪市北区梅田3-1-1">
+        </div>
+        <div class="form-group" style="flex:1; min-width:200px;">
+          <label>予約サイトURL（任意）</label>
+          <input type="url" id="fi_hotel_url" placeholder="https://...">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="flex:1;">
+          <label>メモ（任意）</label>
+          <input type="text" id="fi_hotel_note" placeholder="確認番号、部屋タイプなど">
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOD fields -->
+    <div class="type-fields" id="fields_food">
+      <div class="form-row">
+        <div class="form-group" style="flex:2; min-width:180px;">
+          <label>店名</label>
+          <input type="text" id="fi_food_name" placeholder="例: 道頓堀 〇〇寿司">
+        </div>
+        <div class="form-group">
+          <label>予約・来店時刻</label>
+          <input type="time" id="fi_food_time">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="flex:1; min-width:200px;">
+          <label>📍 住所（Google Maps用）</label>
+          <input type="text" id="fi_food_address" placeholder="例: 大阪市中央区道頓堀1-1-1">
+        </div>
+        <div class="form-group" style="flex:1; min-width:200px;">
+          <label>予約サイトURL（任意）</label>
+          <input type="url" id="fi_food_url" placeholder="https://...">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="flex:1;">
+          <label>メモ（任意）</label>
+          <input type="text" id="fi_food_note" placeholder="予約番号、人数など">
+        </div>
+      </div>
+    </div>
+
+    <!-- SIGHTSEEING fields -->
+    <div class="type-fields" id="fields_sightseeing">
+      <div class="form-row">
+        <div class="form-group" style="flex:2; min-width:180px;">
+          <label>スポット名</label>
+          <input type="text" id="fi_sight_name" placeholder="例: 大阪城、コロッセオ">
+        </div>
+        <div class="form-group">
+          <label>訪問時刻（任意）</label>
+          <input type="time" id="fi_sight_time">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="flex:1; min-width:200px;">
+          <label>📍 住所（Google Maps用）</label>
+          <input type="text" id="fi_sight_address" placeholder="例: 大阪城公園1-1">
+        </div>
+        <div class="form-group" style="flex:1; min-width:200px;">
+          <label>参考サイトURL（任意）</label>
+          <input type="url" id="fi_sight_url" placeholder="https://...">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="flex:1;">
+          <label>メモ（任意）</label>
+          <input type="text" id="fi_sight_note" placeholder="入場料、営業時間など">
+        </div>
+      </div>
+    </div>
+
+    <!-- OTHER fields -->
+    <div class="type-fields" id="fields_other">
+      <div class="form-row">
+        <div class="form-group" style="flex:2; min-width:180px;">
+          <label>内容</label>
+          <input type="text" id="fi_other_name" placeholder="例: 両替、SIM購入">
+        </div>
+        <div class="form-group">
+          <label>時刻（任意）</label>
+          <input type="time" id="fi_other_time">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="flex:1; min-width:200px;">
+          <label>📍 住所・場所（任意）</label>
+          <input type="text" id="fi_other_address" placeholder="">
+        </div>
+        <div class="form-group" style="flex:1; min-width:200px;">
+          <label>URL（任意）</label>
+          <input type="url" id="fi_other_url" placeholder="https://...">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="flex:1;">
+          <label>メモ（任意）</label>
+          <input type="text" id="fi_other_note">
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modalAddItem')">キャンセル</button>
+      <button class="btn btn-primary" onclick="addItineraryItem()">追加する</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Add Packing Item -->
+<div class="modal-overlay" id="modalAddPacking">
+  <div class="modal">
+    <h3>🧳 アイテムを追加</h3>
+    <div class="form-row">
+      <div class="form-group" style="flex:1;">
+        <label>カテゴリ</label>
+        <select id="packCat">
+          <option>👔 衣類</option>
+          <option>🧴 洗面・衛生用品</option>
+          <option>📱 電子機器</option>
+          <option>📄 書類・お金</option>
+          <option>💊 薬・医療</option>
+          <option>🎒 その他</option>
+        </select>
+      </div>
+      <div class="form-group" style="flex:2;">
+        <label>アイテム名</label>
+        <input type="text" id="packName" placeholder="例: パスポート">
+      </div>
+      <div class="form-group">
+        <label>個数</label>
+        <input type="number" id="packCount" placeholder="1" style="width:70px;">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modalAddPacking')">キャンセル</button>
+      <button class="btn btn-primary" onclick="addPackingItem()">追加する</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+const EMOJIS = ['🗼','🏯','🌸','⛩️','🍜','🍕','🌊','🏔️','🎭','🌍','🏖️','🗽','🎡','🛕','🌺'];
+let selectedEmoji = '✈️';
+
+const defaultPackingItems = {
+  '📄 書類・お金': [
+    { name: 'パスポート', count: 1 },
+    { name: 'eチケット（印刷）', count: 1 },
+    { name: 'ホテル予約確認書', count: 1 },
+    { name: '海外旅行保険証', count: 1 },
+    { name: 'クレジットカード', count: 2 },
+    { name: '現金（現地通貨）', count: 1 },
+  ],
+  '👔 衣類': [
+    { name: 'Tシャツ', count: 3 },
+    { name: 'ズボン／スカート', count: 2 },
+    { name: '下着', count: 4 },
+    { name: '靴下', count: 4 },
+    { name: 'パジャマ', count: 1 },
+    { name: 'スニーカー', count: 1 },
+  ],
+  '🧴 洗面・衛生用品': [
+    { name: '歯ブラシ・歯磨き粉', count: 1 },
+    { name: 'シャンプー・コンディショナー', count: 1 },
+    { name: '洗顔料・スキンケア', count: 1 },
+    { name: 'タオル', count: 2 },
+    { name: '日焼け止め', count: 1 },
+  ],
+  '📱 電子機器': [
+    { name: 'スマートフォン', count: 1 },
+    { name: '充電器', count: 1 },
+    { name: 'モバイルバッテリー', count: 1 },
+    { name: '変換プラグ', count: 1 },
+    { name: 'イヤホン', count: 1 },
+  ],
+  '💊 薬・医療': [
+    { name: '常備薬', count: 1 },
+    { name: '胃腸薬', count: 1 },
+    { name: '絆創膏・消毒', count: 1 },
+  ],
+  '🎒 その他': [
+    { name: 'エコバッグ', count: 1 },
+    { name: '南京錠', count: 1 },
+  ],
+};
+
+function defaultTrip(id, name, emoji, start, end) {
+  const packingData = {};
+  for (const cat in defaultPackingItems) {
+    packingData[cat] = defaultPackingItems[cat].map(i => ({ ...i, checked: false, id: uid() }));
+  }
+  return {
+    id, name, emoji, start, end,
+    itinerary: [],
+    expenses: [],
+    budget: '',
+    currency: 'JPY',
+    exchangeRate: '',
+    packing: packingData,
+  };
+}
+
+let state = JSON.parse(localStorage.getItem('travelApp') || 'null');
+if (!state) {
+  state = {
+    trips: [
+      defaultTrip('t1', '大阪旅行', '🌸', '', ''),
+      defaultTrip('t2', 'イタリア旅行', '🍕', '', ''),
+    ],
+    currentTrip: 't1',
+  };
+}
+
+function save() { localStorage.setItem('travelApp', JSON.stringify(state)); }
+function uid() { return Math.random().toString(36).slice(2); }
+function currentTrip() { return state.trips.find(t => t.id === state.currentTrip); }
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+  renderTabs();
+  renderSection();
+  renderEmojiPicker();
+});
+
+// ============================================================
+// TABS
+// ============================================================
+function renderTabs() {
+  const row = document.getElementById('tripTabsRow');
+  const addBtn = row.querySelector('.btn-add-trip');
+  // Remove old tabs
+  row.querySelectorAll('.trip-tab').forEach(el => el.remove());
+  // Insert before addBtn
+  state.trips.forEach(trip => {
+    const tab = document.createElement('button');
+    tab.className = 'trip-tab' + (trip.id === state.currentTrip ? ' active' : '');
+    tab.innerHTML = `<span class="tab-emoji">${trip.emoji}</span>${trip.name}
+      ${state.trips.length > 1 ? `<button class="tab-delete" onclick="deleteTrip('${trip.id}', event)">✕</button>` : ''}`;
+    tab.onclick = (e) => { if (!e.target.classList.contains('tab-delete')) switchTrip(trip.id); };
+    row.insertBefore(tab, addBtn);
+  });
+}
+
+function switchTrip(id) {
+  state.currentTrip = id;
+  save();
+  renderTabs();
+  renderSection();
+  syncBudgetInputs();
+}
+
+function deleteTrip(id, e) {
+  e.stopPropagation();
+  if (!confirm('この旅行を削除しますか？')) return;
+  state.trips = state.trips.filter(t => t.id !== id);
+  if (state.currentTrip === id) state.currentTrip = state.trips[0]?.id || '';
+  save();
+  renderTabs();
+  renderSection();
+}
+
+function openAddTripModal() {
+  document.getElementById('newTripName').value = '';
+  document.getElementById('newTripStart').value = '';
+  document.getElementById('newTripEnd').value = '';
+  selectedEmoji = '✈️';
+  renderEmojiPicker();
+  document.getElementById('modalAddTrip').classList.add('open');
+}
+
+function addTrip() {
+  const name = document.getElementById('newTripName').value.trim();
+  if (!name) { alert('旅行名を入力してください'); return; }
+  const trip = defaultTrip(uid(), name, selectedEmoji,
+    document.getElementById('newTripStart').value,
+    document.getElementById('newTripEnd').value);
+  state.trips.push(trip);
+  state.currentTrip = trip.id;
+  save();
+  closeModal('modalAddTrip');
+  renderTabs();
+  renderSection();
+}
+
+function renderEmojiPicker() {
+  const picker = document.getElementById('emojiPicker');
+  picker.innerHTML = '';
+  ['✈️', ...EMOJIS].forEach(em => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.style.cssText = `font-size:1.4rem; padding:6px; border-radius:8px; border:2px solid ${em===selectedEmoji?'var(--primary)':'transparent'}; background:${em===selectedEmoji?'#eff3ff':'var(--bg)'}; cursor:pointer;`;
+    btn.textContent = em;
+    btn.onclick = () => { selectedEmoji = em; renderEmojiPicker(); };
+    picker.appendChild(btn);
+  });
+}
+
+// ============================================================
+// SECTION NAV
+// ============================================================
+function showSection(name, btn) {
+  document.querySelectorAll('.section-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.section-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('section-' + name).classList.add('active');
+  btn.classList.add('active');
+  renderSection(name);
+}
+
+function renderSection(name) {
+  const active = document.querySelector('.section-btn.active');
+  const section = active ? active.getAttribute('onclick').match(/'(\w+)'/)?.[1] : 'itinerary';
+  if (!name) name = section || 'itinerary';
+  if (name === 'itinerary') renderItinerary();
+  if (name === 'expense') { syncBudgetInputs(); renderExpenses(); }
+  if (name === 'packing') renderPacking();
+  // Always render all
+  renderItinerary();
+  renderExpenses();
+  renderPacking();
+  syncBudgetInputs();
+}
+
+// ============================================================
+// ITINERARY
+// ============================================================
+const TYPE_LABELS = {
+  flight:      ['✈️ フライト',   'type-flight'],
+  hotel:       ['🏨 ホテル',     'type-hotel'],
+  food:        ['🍽️ お店・食事', 'type-food'],
+  sightseeing: ['🗺️ 観光',       'type-sightseeing'],
+  transport:   ['🚆 交通',       'type-transport'],
+  other:       ['📌 その他',     'type-other'],
+};
+const DOT_CLS = { flight:'dot-flight', hotel:'dot-hotel', food:'dot-food', sightseeing:'dot-sightseeing', transport:'dot-transport', other:'dot-other' };
+const TYPE_ICONS = { flight:'✈️', hotel:'🏨', food:'🍽️', sightseeing:'🗺️', transport:'🚆', other:'📌' };
+
+let currentItemType = 'transport';
+
+function selectItemType(type, btn) {
+  currentItemType = type;
+  document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  document.querySelectorAll('.type-fields').forEach(f => f.classList.remove('active'));
+  document.getElementById('fields_' + type).classList.add('active');
+}
+
+function openAddItemModal() {
+  // reset all fields
+  document.querySelectorAll('#modalAddItem input, #modalAddItem select').forEach(el => {
+    if (el.tagName === 'SELECT') el.selectedIndex = 0;
+    else el.value = '';
+  });
+  selectItemType('transport', document.querySelector('[data-type="transport"]'));
+  document.getElementById('modalAddItem').classList.add('open');
+}
+
+function mapsUrl(query) {
+  return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(query);
+}
+
+function renderItinerary() {
+  const trip = currentTrip();
+  const list = document.getElementById('itineraryList');
+  if (!trip || trip.itinerary.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-emoji">🗓️</div><p>まだ予定がありません。「＋ 追加」から追加しましょう！</p></div>`;
+    return;
+  }
+  const grouped = {};
+  trip.itinerary.forEach(item => {
+    const key = item.date || '日付未定';
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(item);
+  });
+  const sorted = Object.keys(grouped).sort((a,b) => {
+    if (a==='日付未定') return 1; if (b==='日付未定') return -1;
+    return a.localeCompare(b);
+  });
+  list.innerHTML = sorted.map(date => {
+    const items = grouped[date].sort((a,b) => (a.sortTime||'').localeCompare(b.sortTime||''));
+    const dateLabel = date==='日付未定' ? '📌 日付未定' : `📅 ${formatDate(date)}`;
+    return `<div class="itinerary-day">
+      <div class="day-header">${dateLabel}</div>
+      <div class="timeline">${items.map(renderItineraryItem).join('')}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderItineraryItem(item) {
+  const [label, badgeCls] = TYPE_LABELS[item.type] || TYPE_LABELS.other;
+  const dotCls = DOT_CLS[item.type] || 'dot-other';
+  const icon = TYPE_ICONS[item.type] || '📌';
+
+  let routeHtml = '';
+  let detailChips = [];
+  let links = [];
+
+  if (item.type === 'transport') {
+    const mode = item.transportMode || '';
+    const line = item.lineName ? `<span class="route-arrow-label">${escHtml(item.lineName)}</span>` : '';
+    routeHtml = `<div class="route-row">
+      <div class="route-point">
+        ${item.fromStation ? `<span class="route-station">🚉 ${escHtml(item.fromStation)}</span>` : ''}
+        ${item.fromTime ? `<span class="route-time">${item.fromTime}</span>` : ''}
+      </div>
+      <div class="route-arrow">
+        <div class="route-arrow-line">──────→</div>
+        ${line}
+      </div>
+      <div class="route-point">
+        ${item.toStation ? `<span class="route-station">🏁 ${escHtml(item.toStation)}</span>` : ''}
+        ${item.toTime ? `<span class="route-time">${item.toTime}</span>` : ''}
+      </div>
+    </div>`;
+    if (item.note) detailChips.push(`📝 ${escHtml(item.note)}`);
+    if (item.url) links.push(`<a class="item-link" href="${escHtml(item.url)}" target="_blank" rel="noopener">🔗 予約確認</a>`);
+
+  } else if (item.type === 'flight') {
+    const boardHtml = item.boardingTime ? `<span class="route-arrow-label">搭乗 ${item.boardingTime}</span>` : '';
+    routeHtml = `
+      ${item.boardingTime ? `<div class="detail-row" style="margin-bottom:4px;"><span class="detail-chip">🛂 搭乗開始: <strong>${item.boardingTime}</strong></span></div>` : ''}
+      <div class="route-row">
+        <div class="route-point">
+          ${item.fromAirport ? `<span class="route-station">🛫 ${escHtml(item.fromAirport)}</span>` : ''}
+          ${item.departTime ? `<span class="route-time">${item.departTime}</span>` : ''}
+        </div>
+        <div class="route-arrow">
+          <div class="route-arrow-line">──────→</div>
+          ${item.flightNo ? `<span class="route-arrow-label">${escHtml(item.flightNo)}</span>` : ''}
+        </div>
+        <div class="route-point">
+          ${item.toAirport ? `<span class="route-station">🛬 ${escHtml(item.toAirport)}</span>` : ''}
+          ${item.arrivalTime ? `<span class="route-time">${item.arrivalTime}</span>` : ''}
+        </div>
+      </div>`;
+    if (item.note) detailChips.push(`📝 ${escHtml(item.note)}`);
+    if (item.url) links.push(`<a class="item-link" href="${escHtml(item.url)}" target="_blank" rel="noopener">🔗 予約確認</a>`);
+
+  } else if (item.type === 'hotel') {
+    const times = [];
+    if (item.checkInTime)  times.push(`✅ チェックイン <strong>${item.checkInTime}</strong>`);
+    if (item.checkOutTime) times.push(`🚪 チェックアウト <strong>${item.checkOutTime}</strong>`);
+    if (times.length) routeHtml = `<div class="detail-row">${times.map(t=>`<span class="detail-chip">${t}</span>`).join('')}</div>`;
+    if (item.address) {
+      detailChips.push(`📍 ${escHtml(item.address)}`);
+      links.push(`<a class="item-link maps" href="${mapsUrl(item.address)}" target="_blank" rel="noopener">🗺️ Google Maps</a>`);
+    }
+    if (item.note) detailChips.push(`📝 ${escHtml(item.note)}`);
+    if (item.url) links.push(`<a class="item-link" href="${escHtml(item.url)}" target="_blank" rel="noopener">🔗 予約確認</a>`);
+
+  } else if (item.type === 'food') {
+    if (item.reserveTime) routeHtml = `<div class="detail-row"><span class="detail-chip">🕐 予約時刻 <strong>${item.reserveTime}</strong></span></div>`;
+    if (item.address) {
+      detailChips.push(`📍 ${escHtml(item.address)}`);
+      links.push(`<a class="item-link maps" href="${mapsUrl(item.address)}" target="_blank" rel="noopener">🗺️ Google Maps</a>`);
+    } else if (item.name) {
+      links.push(`<a class="item-link maps" href="${mapsUrl(item.name)}" target="_blank" rel="noopener">🗺️ Google Maps</a>`);
+    }
+    if (item.note) detailChips.push(`📝 ${escHtml(item.note)}`);
+    if (item.url) links.push(`<a class="item-link" href="${escHtml(item.url)}" target="_blank" rel="noopener">🔗 予約確認</a>`);
+
+  } else if (item.type === 'sightseeing') {
+    if (item.visitTime) routeHtml = `<div class="detail-row"><span class="detail-chip">🕐 ${item.visitTime}</span></div>`;
+    if (item.address) {
+      detailChips.push(`📍 ${escHtml(item.address)}`);
+      links.push(`<a class="item-link maps" href="${mapsUrl(item.address)}" target="_blank" rel="noopener">🗺️ Google Maps</a>`);
+    } else if (item.name) {
+      links.push(`<a class="item-link maps" href="${mapsUrl(item.name)}" target="_blank" rel="noopener">🗺️ Google Maps</a>`);
+    }
+    if (item.note) detailChips.push(`📝 ${escHtml(item.note)}`);
+    if (item.url) links.push(`<a class="item-link" href="${escHtml(item.url)}" target="_blank" rel="noopener">🔗 サイト</a>`);
+
+  } else {
+    if (item.visitTime) routeHtml = `<div class="detail-row"><span class="detail-chip">🕐 ${item.visitTime}</span></div>`;
+    if (item.address) {
+      detailChips.push(`📍 ${escHtml(item.address)}`);
+      links.push(`<a class="item-link maps" href="${mapsUrl(item.address)}" target="_blank" rel="noopener">🗺️ Google Maps</a>`);
+    }
+    if (item.note) detailChips.push(`📝 ${escHtml(item.note)}`);
+    if (item.url) links.push(`<a class="item-link" href="${escHtml(item.url)}" target="_blank" rel="noopener">🔗 リンク</a>`);
+  }
+
+  const detailRow = (detailChips.length || links.length) ? `
+    <div class="detail-row" style="margin-top:6px;">
+      ${detailChips.map(c=>`<span class="detail-chip">${c}</span>`).join('')}
+      ${links.join('')}
+    </div>` : '';
+
+  return `<div class="tl-item">
+    <div class="tl-dot ${dotCls}">${icon}</div>
+    <div class="tl-card">
+      <div class="tl-header">
+        <div class="tl-type-name">
+          <span class="item-type-badge ${badgeCls}">${label}</span>
+          <span class="tl-name">${escHtml(item.name)}</span>
+        </div>
+        <div class="tl-actions">
+          <button class="btn btn-danger btn-icon btn-sm" onclick="deleteItineraryItem('${item.id}')">🗑️</button>
+        </div>
+      </div>
+      ${routeHtml}
+      ${detailRow}
+    </div>
+  </div>`;
+}
+
+function g(id) { return (document.getElementById(id)?.value || '').trim(); }
+
+function addItineraryItem() {
+  const type = currentItemType;
+  const date = g('fi_date');
+  let item = { id: uid(), type, date };
+
+  if (type === 'transport') {
+    item.transportMode = g('fi_transport_mode') || '電車';
+    item.lineName     = g('fi_transport_line');
+    item.fromStation  = g('fi_from_station');
+    item.fromTime     = g('fi_from_time');
+    item.toStation    = g('fi_to_station');
+    item.toTime       = g('fi_to_time');
+    item.note         = g('fi_transport_note');
+    item.url          = g('fi_transport_url');
+    item.name         = [item.transportMode, item.lineName, item.fromStation && item.toStation ? `${item.fromStation}→${item.toStation}` : ''].filter(Boolean).join(' ');
+    item.sortTime     = item.fromTime || '';
+    if (!item.fromStation && !item.toStation) { alert('出発駅または到着駅を入力してください'); return; }
+
+  } else if (type === 'flight') {
+    item.flightNo     = g('fi_flight_no');
+    item.boardingTime = g('fi_boarding_time');
+    item.fromAirport  = g('fi_from_airport');
+    item.departTime   = g('fi_depart_time');
+    item.toAirport    = g('fi_to_airport');
+    item.arrivalTime  = g('fi_arrival_time');
+    item.note         = g('fi_flight_note');
+    item.url          = g('fi_flight_url');
+    item.name         = [item.flightNo, item.fromAirport && item.toAirport ? `${item.fromAirport}→${item.toAirport}` : ''].filter(Boolean).join(' ') || 'フライト';
+    item.sortTime     = item.boardingTime || item.departTime || '';
+    if (!item.flightNo && !item.fromAirport) { alert('フライト番号または出発空港を入力してください'); return; }
+
+  } else if (type === 'hotel') {
+    item.name         = g('fi_hotel_name');
+    item.checkInTime  = g('fi_checkin_time');
+    item.checkOutTime = g('fi_checkout_time');
+    item.address      = g('fi_hotel_address');
+    item.note         = g('fi_hotel_note');
+    item.url          = g('fi_hotel_url');
+    item.sortTime     = item.checkInTime || '';
+    if (!item.name) { alert('ホテル名を入力してください'); return; }
+
+  } else if (type === 'food') {
+    item.name        = g('fi_food_name');
+    item.reserveTime = g('fi_food_time');
+    item.address     = g('fi_food_address');
+    item.note        = g('fi_food_note');
+    item.url         = g('fi_food_url');
+    item.sortTime    = item.reserveTime || '';
+    if (!item.name) { alert('店名を入力してください'); return; }
+
+  } else if (type === 'sightseeing') {
+    item.name      = g('fi_sight_name');
+    item.visitTime = g('fi_sight_time');
+    item.address   = g('fi_sight_address');
+    item.note      = g('fi_sight_note');
+    item.url       = g('fi_sight_url');
+    item.sortTime  = item.visitTime || '';
+    if (!item.name) { alert('スポット名を入力してください'); return; }
+
+  } else {
+    item.name      = g('fi_other_name');
+    item.visitTime = g('fi_other_time');
+    item.address   = g('fi_other_address');
+    item.note      = g('fi_other_note');
+    item.url       = g('fi_other_url');
+    item.sortTime  = item.visitTime || '';
+    if (!item.name) { alert('内容を入力してください'); return; }
+  }
+
+  currentTrip().itinerary.push(item);
+  save();
+  closeModal('modalAddItem');
+  renderItinerary();
+}
+
+function deleteItineraryItem(id) {
+  const trip = currentTrip();
+  trip.itinerary = trip.itinerary.filter(i => i.id !== id);
+  save();
+  renderItinerary();
+}
+
+function openImportModal() {
+  document.getElementById('importJson').value = '';
+  document.getElementById('importError').style.display = 'none';
+  document.getElementById('imageInput').value = '';
+  document.getElementById('aiStatus').style.display = 'none';
+  document.getElementById('analyzeBtn').disabled = false;
+  document.getElementById('analyzeBtn').textContent = '🤖 AIで読み取る';
+  document.getElementById('modalImport').classList.add('open');
+}
+
+function importItem() {
+  const raw = document.getElementById('importJson').value.trim();
+  const errEl = document.getElementById('importError');
+  errEl.style.display = 'none';
+
+  let data;
+  try {
+    data = JSON.parse(raw);
+  } catch(e) {
+    errEl.textContent = 'JSONの形式が正しくありません。Claudeからコピーしたテキストをそのまま貼り付けてください。';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  // 配列でも単体でも受け付ける
+  const items = Array.isArray(data) ? data : [data];
+  const trip = currentTrip();
+  let added = 0;
+
+  for (const d of items) {
+    if (!d.type) { errEl.textContent = '"type" フィールドがありません。'; errEl.style.display = 'block'; return; }
+    const item = { id: uid(), ...d };
+    // sortTime を自動補完
+    if (!item.sortTime) {
+      item.sortTime = item.fromTime || item.boardingTime || item.departTime ||
+                      item.checkInTime || item.reserveTime || item.visitTime || '';
+    }
+    // name を自動補完
+    if (!item.name) {
+      if (item.type === 'transport') item.name = [item.transportMode, item.fromStation && item.toStation ? `${item.fromStation}→${item.toStation}` : ''].filter(Boolean).join(' ') || '交通';
+      else if (item.type === 'flight') item.name = [item.flightNo, item.fromAirport && item.toAirport ? `${item.fromAirport}→${item.toAirport}` : ''].filter(Boolean).join(' ') || 'フライト';
+      else item.name = item.type;
+    }
+    trip.itinerary.push(item);
+    added++;
+  }
+
+  save();
+  closeModal('modalImport');
+  renderItinerary();
+  if (added > 1) alert(`${added}件追加しました！`);
+}
+
+// ============================================================
+// EXPENSE
+// ============================================================
+const CURRENCY_SYMBOLS = { JPY: '¥', EUR: '€', USD: '$', GBP: '£', CNY: '¥', KRW: '₩', THB: '฿' };
+
+function syncBudgetInputs() {
+  const trip = currentTrip();
+  if (!trip) return;
+  document.getElementById('budgetInput').value = trip.budget || '';
+  document.getElementById('currencySelect').value = trip.currency || 'JPY';
+  document.getElementById('exchangeRate').value = trip.exchangeRate || '';
+  updateRateVisibility();
+}
+
+function saveBudget() {
+  currentTrip().budget = document.getElementById('budgetInput').value;
+  save();
+  renderExpenses();
+}
+
+function saveCurrency() {
+  currentTrip().currency = document.getElementById('currencySelect').value;
+  save();
+  updateRateVisibility();
+  renderExpenses();
+}
+
+function saveExchangeRate() {
+  currentTrip().exchangeRate = document.getElementById('exchangeRate').value;
+  save();
+  renderExpenses();
+}
+
+function updateRateVisibility() {
+  const trip = currentTrip();
+  const cur = trip?.currency || 'JPY';
+  const rg = document.getElementById('rateGroup');
+  rg.style.display = cur === 'JPY' ? 'none' : 'flex';
+  document.getElementById('rateLabel').textContent = cur;
+}
+
+function toJpy(amount, currency, trip) {
+  if (currency === 'JPY') return amount;
+  const rate = parseFloat(trip.exchangeRate) || 0;
+  return rate ? amount * rate : null;
+}
+
+function renderExpenses() {
+  const trip = currentTrip();
+  const total = calcTotalJpy(trip);
+  const budget = parseFloat(trip.budget) || 0;
+  const remaining = budget ? budget - total : null;
+
+  // Summary cards
+  const sym = CURRENCY_SYMBOLS[trip.currency] || '';
+  let summaryHtml = `
+    <div class="summary-card">
+      <div class="summary-label">合計支出 (円換算)</div>
+      <div class="summary-value">¥${Math.round(total).toLocaleString()}</div>
+    </div>`;
+  if (budget) {
+    summaryHtml += `<div class="summary-card budget-card">
+      <div class="summary-label">予算</div>
+      <div class="summary-value">¥${budget.toLocaleString()}</div>
+    </div>
+    <div class="summary-card ${remaining < 0 ? 'over-budget' : 'remaining-card'}">
+      <div class="summary-label">${remaining < 0 ? '予算超過' : '残り予算'}</div>
+      <div class="summary-value">¥${Math.abs(Math.round(remaining)).toLocaleString()}</div>
+    </div>`;
+  }
+  document.getElementById('expenseSummary').innerHTML = summaryHtml;
+
+  // Expense list
+  const el = document.getElementById('expenseList');
+  if (!trip.expenses.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-emoji">💰</div><p>まだ支出がありません。</p></div>`;
+    return;
+  }
+  el.innerHTML = [...trip.expenses].reverse().map(exp => {
+    const jpy = toJpy(exp.amount, exp.currency, trip);
+    const jpyStr = jpy !== null && exp.currency !== 'JPY' ? `≈ ¥${Math.round(jpy).toLocaleString()}` : '';
+    const sym2 = CURRENCY_SYMBOLS[exp.currency] || '';
+    return `<div class="expense-item">
+      <div class="expense-category" style="background:${catColor(exp.category)}">${exp.category}</div>
+      <div class="expense-info">
+        <div class="expense-name">${escHtml(exp.name)}</div>
+        <div class="expense-date">${exp.date ? formatDate(exp.date) : '日付なし'}</div>
+      </div>
+      <div>
+        <div class="expense-amount">${sym2}${parseFloat(exp.amount).toLocaleString()} ${exp.currency}</div>
+        ${jpyStr ? `<div class="expense-amount-jpy">${jpyStr}</div>` : ''}
+      </div>
+      <button class="btn btn-danger btn-icon btn-sm" onclick="deleteExpense('${exp.id}')">🗑️</button>
+    </div>`;
+  }).join('');
+}
+
+function calcTotalJpy(trip) {
+  return trip.expenses.reduce((sum, exp) => {
+    const jpy = toJpy(exp.amount, exp.currency, trip);
+    return sum + (jpy !== null ? jpy : exp.amount);
+  }, 0);
+}
+
+function catColor(cat) {
+  const map = {'✈️':'#dbeafe','🏨':'#d1fae5','🍽️':'#fef3c7','🗺️':'#ede9fe','🛍️':'#fce7f3','💊':'#fee2e2','📱':'#e0f2fe','📌':'#f3f4f6'};
+  return map[cat] || '#f3f4f6';
+}
+
+function addExpense() {
+  const name = document.getElementById('expName').value.trim();
+  const amount = parseFloat(document.getElementById('expAmount').value);
+  if (!name) { alert('内容を入力してください'); return; }
+  if (isNaN(amount) || amount <= 0) { alert('金額を入力してください'); return; }
+  const trip = currentTrip();
+  trip.expenses.push({
+    id: uid(),
+    category: document.getElementById('expCat').value,
+    name,
+    amount,
+    currency: document.getElementById('expCurrency').value,
+    date: document.getElementById('expDate').value,
+  });
+  save();
+  document.getElementById('expName').value = '';
+  document.getElementById('expAmount').value = '';
+  document.getElementById('expDate').value = '';
+  renderExpenses();
+}
+
+function deleteExpense(id) {
+  const trip = currentTrip();
+  trip.expenses = trip.expenses.filter(e => e.id !== id);
+  save();
+  renderExpenses();
+}
+
+// ============================================================
+// PACKING
+// ============================================================
+function renderPacking() {
+  const trip = currentTrip();
+  const container = document.getElementById('packingList');
+  if (!trip) return;
+
+  const cats = Object.keys(trip.packing);
+  if (cats.length === 0 && Object.values(trip.packing).every(arr => !arr.length)) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-emoji">🧳</div><p>アイテムがありません。</p></div>`;
+    return;
+  }
+
+  container.innerHTML = cats.map(cat => {
+    const items = trip.packing[cat] || [];
+    const checked = items.filter(i => i.checked).length;
+    const total = items.length;
+    const pct = total ? Math.round((checked/total)*100) : 0;
+    return `<div class="packing-category">
+      <div class="packing-cat-header">
+        <div class="packing-cat-title">${cat}</div>
+        <div class="packing-progress">${checked}/${total}</div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      ${items.map(item => `
+        <div class="packing-item ${item.checked ? 'checked' : ''}" onclick="togglePacking('${cat}', '${item.id}')">
+          <input type="checkbox" ${item.checked ? 'checked' : ''} onclick="event.stopPropagation(); togglePacking('${cat}', '${item.id}')">
+          <span class="packing-item-name">${escHtml(item.name)}</span>
+          ${item.count > 1 ? `<span class="packing-item-count">×${item.count}</span>` : ''}
+          <button class="btn btn-danger btn-icon btn-sm" style="margin-left:4px;" onclick="event.stopPropagation(); deletePackingItem('${cat}', '${item.id}')">🗑️</button>
+        </div>
+      `).join('')}
+    </div>`;
+  }).join('');
+}
+
+function togglePacking(cat, id) {
+  const trip = currentTrip();
+  const item = trip.packing[cat]?.find(i => i.id === id);
+  if (item) item.checked = !item.checked;
+  save();
+  renderPacking();
+}
+
+function deletePackingItem(cat, id) {
+  const trip = currentTrip();
+  trip.packing[cat] = (trip.packing[cat] || []).filter(i => i.id !== id);
+  save();
+  renderPacking();
+}
+
+function openAddPackingModal() {
+  document.getElementById('packName').value = '';
+  document.getElementById('packCount').value = '1';
+  document.getElementById('modalAddPacking').classList.add('open');
+}
+
+function addPackingItem() {
+  const name = document.getElementById('packName').value.trim();
+  if (!name) { alert('アイテム名を入力してください'); return; }
+  const cat = document.getElementById('packCat').value;
+  const count = parseInt(document.getElementById('packCount').value) || 1;
+  const trip = currentTrip();
+  if (!trip.packing[cat]) trip.packing[cat] = [];
+  trip.packing[cat].push({ id: uid(), name, count, checked: false });
+  save();
+  closeModal('modalAddPacking');
+  renderPacking();
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+});
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('ja-JP', { month: 'long', day: 'numeric', weekday: 'short' });
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ============================================================
+// SETTINGS
+// ============================================================
+function openSettingsModal() {
+  document.getElementById('apiKeyInput').value = localStorage.getItem('travelAppApiKey') || '';
+  document.getElementById('modalSettings').classList.add('open');
+}
+
+function saveApiKey() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (key) localStorage.setItem('travelAppApiKey', key);
+  else localStorage.removeItem('travelAppApiKey');
+  closeModal('modalSettings');
+  alert(key ? '✅ APIキーを保存しました！' : 'APIキーを削除しました。');
+}
+
+// ============================================================
+// AI IMAGE ANALYSIS
+// ============================================================
+async function analyzeImage() {
+  const apiKey = localStorage.getItem('travelAppApiKey') || '';
+  if (!apiKey) {
+    alert('APIキーが設定されていません。\n右上の ⚙️ からAPIキーを入力してください。');
+    return;
+  }
+  const fileInput = document.getElementById('imageInput');
+  if (!fileInput.files || !fileInput.files[0]) {
+    alert('画像を選択してください。');
+    return;
+  }
+
+  const file = fileInput.files[0];
+  const reader = new FileReader();
+
+  reader.onload = async (e) => {
+    const base64Data = e.target.result.split(',')[1];
+    const mediaType = file.type || 'image/jpeg';
+
+    const btn = document.getElementById('analyzeBtn');
+    const statusEl = document.getElementById('aiStatus');
+    btn.disabled = true;
+    btn.textContent = '🔄 読み取り中...';
+    statusEl.style.display = 'block';
+    statusEl.style.color = 'var(--muted)';
+    statusEl.textContent = 'AIが画像を解析しています...';
+
+    const prompt = `この旅行予約確認画像から情報を読み取り、以下の形式のJSONのみを返してください。説明は不要です。
+
+フライト: {"type":"flight","date":"YYYY-MM-DD","name":"","flightNo":"","boardingTime":"HH:MM","fromAirport":"","departTime":"HH:MM","toAirport":"","arrivalTime":"HH:MM","note":"","url":""}
+ホテル: {"type":"hotel","date":"YYYY-MM-DD","name":"","checkInTime":"HH:MM","checkOutTime":"HH:MM","address":"","note":"","url":""}
+電車・交通: {"type":"transport","date":"YYYY-MM-DD","transportMode":"電車","lineName":"","fromStation":"","fromTime":"HH:MM","toStation":"","toTime":"HH:MM","note":"","url":""}
+レストラン: {"type":"food","date":"YYYY-MM-DD","name":"","reserveTime":"HH:MM","address":"","note":"","url":""}
+観光: {"type":"sightseeing","date":"YYYY-MM-DD","name":"","visitTime":"HH:MM","address":"","note":"","url":""}
+
+複数ある場合は配列で返してください。日付はYYYY-MM-DD、時刻はHH:MM形式で。`;
+
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json',
+          'anthropic-dangerous-direct-browser-access': 'true',
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5',
+          max_tokens: 1024,
+          messages: [{
+            role: 'user',
+            content: [
+              { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64Data } },
+              { type: 'text', text: prompt },
+            ]
+          }]
+        })
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error?.message || `HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      const text = data.content?.[0]?.text || '';
+      const match = text.match(/(\[[\s\S]*\]|\{[\s\S]*\})/);
+
+      if (match) {
+        // Open the details element and fill textarea
+        const details = document.querySelector('#modalImport details');
+        if (details) details.open = true;
+        document.getElementById('importJson').value = match[1];
+        statusEl.style.color = '#10b981';
+        statusEl.textContent = '✅ 読み取り完了！内容を確認して「追加する」をタップしてください。';
+      } else {
+        statusEl.style.color = '#f59e0b';
+        statusEl.textContent = '⚠️ データを取得できませんでした。別の画像を試してください。';
+      }
+    } catch (err) {
+      statusEl.style.color = '#ef4444';
+      statusEl.textContent = `❌ エラー: ${err.message}`;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '🤖 AIで読み取る';
+    }
+  };
+
+  reader.readAsDataURL(file);
+}
+</script>
+</body>
+</html>
